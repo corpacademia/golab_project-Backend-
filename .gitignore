@@ -1,0 +1,21 @@
+# Node modules directory
+node_modules/
+
+# Terraform directories and lock file
+.terraform/
+.terraform.lock.hcl
+
+# AWS CLI related files/folders (adjust if needed)
+awscli/
+
+# Cryptography related files/folders (adjust if needed)
+cryptography/
+
+# Docutils related files/folders (adjust if needed)
+docutils/
+
+# Python bytecode cache
+__pycache__/
+
+terraform
+terraform.exe
