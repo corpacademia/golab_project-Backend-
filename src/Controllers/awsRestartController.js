@@ -111,7 +111,51 @@ const checkIsstarted = async(req,res)=>{
     }
 }
 
+const automateInstanceVolume=async(req,res)=>{
+    try {
+      const { instance_id  } = req.body;
+      console.log('Automate instance volume')
+      console.log(instance_id)
+      // Run the script 
+      const args = [instance_id];
+      const pythonProcess = spawn('python', ['./python_scripts.py/cloudvms/automateVolume.py',...args]);
+      pythonProcess.stdout.on('data', (data) => {
+        console.log('Output produced');
+        function formatOutput(output) {
+          return output.replace(/\r\n/g, '\n'); // Replace \r\n with newlines
+        }
+        result += formatOutput(data.toString()); // Accumulate the script's output
+        console.log(`stdout: ${data}`);
+      })
+      pythonProcess.stderr.on('data', (data) => {
+        console.error(`stderr: ${data}`);
+        res.status(400).json({
+          success: false,
+          message: 'Error during script execution',
+          details: data.toString(), // Include error details for debugging
+        });
+      })
+      pythonProcess.on('close', (code) => {
+        if (code === 0) {
+          res.status(200).json({
+            success: true,
+            message: 'Automate Instance Volume script executed successfully',
+            result, // Include the script output
+          });
+        } else {
+          res.status(500).json({
+            success: false,
+            message: 'Automate Instance Volume script execution failed',
+          });
+        }
+      })
+    } catch (error) {
+      return res.status(500).send({success:false,message:"Could not automate the volume",error})
+    }
+}
+
   module.exports={
     restartInstance,
     checkIsstarted,
+    automateInstanceVolume,
   }

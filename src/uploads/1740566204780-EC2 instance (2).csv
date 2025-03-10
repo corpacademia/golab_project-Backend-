@@ -1,0 +1,32 @@
+instanceName,memory,vcpu,Storage,networkPerformance,onDemand_Windows_base_pricing,onDemand_Ubuntu_Pro_base_pricing,onDemand_Suse_base_pricing, onDemand_Rhel_base_pricing,onDemand_Linux_base_pricing
+t2.micro-Free tier eligible,1,1,ESB Only,Up to 5 Gigabit,0.0162 USD per Hour,0.0134 USD per Hour,0.0116 USD per Hour,0.026 USD per Hour,0.0116 USD per Hour
+t2.nano,0.5,1,ESB Only,Up to 5 Gigabit,0.0081 USD per Hour,0.0076 USD per, 0.0058 USD per Hour,-,0.0058 USD per Hour
+t2.small,2,1,ESB Only,Up to 5 Gigabit,0.032 USD per Hour,0.025 USD per Hour,0.053 USD per Hour,0.0376 USD per Hour,0.023 USD per Hour
+t2.large,8,2,ESB Only,Up to 5 Gigabit, 0.1208 USD per Hour,0.0963 USD per Hour,0.1928 USD per Hour,0.1216 USD per Hour,0.0928 USD per Hour
+t2.xlarge,16,4,ESB Only,Up to 5 Gigabit,0.2266 USD per Hour, 0.1926 USD per Hour,0.2856 USD per Hour,0.2432 USD per Hour,0.1856 USD per Hour
+t2.2xlarge,32,8,ESB Only,Up to 5 Gigabit, 0.4332 USD per Hour,0.3852 USD per Hour, 0.4712 USD per Hour,0.4864 USD per Hour,0.3712 USD per Hour
+t3.nano,0.5,2,ESB Only,Up to 5 Gigabit, 0.0098 USD per Hour,0.0087 USD per Hour, 0.0052 USD per Hour,,0.0052 USD per Hour
+t3.micro,1,2,ESB Only,Up to 5 Gigabit,0.0196 USD per Hour,0.0139 USD per Hour,0.0104 USD per Hour,0.0392 USD per Hour,0.0104 USD per Hour
+t3.small,2,2,ESB Only,Up to 5 Gigabit,0.0392 USD per Hour,0.0243 USD per Hour,0.0518 USD per Hour,0.0496 USD per Hour,0.0208 USD per Hour
+t3.large,8,2,ESB Only,Up to 5 Gigabit,0.1108 USD per Hour,0.0867 USD per Hour,0.1395 USD per Hour,0.112 USD per Hour,0.0832 USD per Hour
+t3.xlarge,16,4,ESB Only,Up to 5 Gigabit,0.24 USD per Hour,0.1734 USD per Hour,0.2227 USD per Hour,0.224 USD per Hour, 0.1664 USD per Hour
+t3.2xlarge,32,8,ESB Only,Up to 5 Gigabit,0.48 USD per Hour,0.3468 USD per Hour, 0.4578 USD per Hour,0.448 USD per Hour, 0.3328 USD per Hour
+x2iden.8xlarge,1024,128,ESB Only,,9.07775 USD per Hour,-,7.73075 USD Per hour,-,-
+c5.xlarge,8,4,ESB Only,Up to 10 Gigabit,0.354 USD per Hour,0.177 USD per Hour,0.226 USD per Hour,0.228 USD per Hour,0.17 USD per Hour
+c5.large,4,2,ESB Only,Up to 10 Gigabit,0.177 USD per Hour,0.089 USD per Hour,0.141 USD per Hour, 0.114 USD per Hour,0.085 USD per Hour
+c5.4xlarge,32,16,1 x 400 NVMe SSD,Up to 10 Gigabit, 1.416 USD per Hour, 0.708 USD per Hour, 0.78 USD per Hour,0.853 USD per Hour,0.68 USD per Hour
+c5.xlarge,8,4,ESB Only,Up to 10 Gigabit, 0.354 USD per Hour,0.177 USD per Hour,0.226 USD per Hour,0.228 USD per Hour, 0.17 USD per Hour
+c5.12xlarge,96,48,ESB Only,Up to 12 Gigabit,4.248 USD per Hour,2.124 USD per Hour,2.14 USD per Hour,2.558 USD per Hour,2.04 USD per Hour
+c5.24xlarge,192,96,ESB Only,Up to 25 Gigabit,8.496 USD per Hour,4.248 USD per Hour,4.18 USD per Hour,5.117 USD per Hour,4.08 USD per Hour
+c5.metal,192,96,ESB Only,Up to 25 Gigabit,8.496 USD per Hour, 4.248 USD per Hour,4.18 USD per Hour,5.117 USD per Hour,4.08 USD per Hour
+c5a.12xlarge,96,48,ESB Only,Up to 12 Gigabit,4.056 USD per Hour,1.932 USD per Hour,1.973 USD per Hour,2.366 USD per Hour,1.848 USD per Hour
+c5ad.16xlarge,128,64,2400 GB (2 * 1200 GB NVMe SSD) ,Up to 20 Gigabit,5.696 USD per Hour,2.864 USD per Hour,2.877 USD per Hour,3.443 USD per Hour, 2.752 USD per Hour
+c6a.16xlarge,128,64,ESB Only,25000 Megabit,5.392 USD per Hour,2.56 USD per Hour,2.573 USD per Hour, 3.1392 USD per Hour,2.448 USD per Hour
+c6i.4xlarge,32,16,ESB Only,Up to 12500 Megabit,1.416 USD per Hour,0.708 USD per Hour,0.805 USD per Hour,0.8528 USD per Hour,0.68 USD per Hour
+c7a.medium,2,1,ESB Only,Up to 12.5 Gigabit,0.09732 USD per Hour,0.05307 USD per Hour,0.10762 USD per Hour, 0.06572 USD per Hour,0.05132 USD per Hour
+vt1.24xlarge,192,6,ESB Only,Up to 25 Gigabit,-,5.368 USD per Hour,-,6.2368 USD per Hour,5.2 USD per Hour
+z1d.large,16,2,75 GB NVMe SSD,Up to 10 Gigabit,0.278 USD per Hour,0.19 USD per Hour,0.242 USD per Hour, 0.215 USD per Hour,0.186 USD per Hour
+m5d.xlarge,16,4,150 GB NVMe SSD,Up to 10 Gigabit, 0.41 USD per Hour,0.233 USD per Hour,0.282 USD per Hour,0.284 USD per Hour, 0.226 USD per Hour
+d3.xlarge,32,4,5940 GB (3 * 1980 GB NVMe HDD),Up to 15 Gigabit,0.683 USD per Hour,0.506 USD per Hour,0.556 USD per Hour,0.557 USD per Hour,0.499 USD per Hour
+i3.large,15.3,2,475 GB NVMe SSD,Up to 10 Gigabit,0.248 USD per Hour,0.16 USD per Hour,0.256 USD per Hour,0.185 USD per Hour, 0.156 USD per Hour
+i3.metal,512,72,ESB Only,,7.936 USD per Hour,5.118 USD per Hour,5.092 USD per Hour,5.77 USD per Hour,4.992 USD per Hour

@@ -1,6 +1,7 @@
 const express  = require('express')
 const multer = require('multer')
-
+const fs = require('fs')
+const path = require('path')
 
 const {
   getOrganizationUser,
@@ -36,19 +37,24 @@ const {
   getAssignLabOnLabId,deleteSuperVm,ConnectCorpAwsAccount,ConnectOrgAws,getCloudAssignedInstance,
   checkCloudAssignedInstanceLaunched,stopInstance,getSofwareDetails,getUserDecryptPasswordFromCloud,
   getNewIpFromCloud,deleteLab,getLabCatalogues,getAwsInstanceDetailsOfUsers,updatetAwsInstanceDetailsOfUsers,updatetAwsLabInstanceDetails,
-  checkLabCloudInstanceLaunched,
+  checkLabCloudInstanceLaunched,createOrganization,createNewCatalogue,goldenToInstanceForNewCatalogue
 } = require('../Controllers/labController')
 
 const Router = require("express")
 const router = Router()
 
+const uploadDir = path.join(__dirname, '../public/uploads/');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
 // Set up multer storage options
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'uploads/'); // Folder where files will be uploaded
+    cb(null, uploadDir); // Use the correct folder path
   },
   filename: function (req, file, cb) {
-    cb(null, file.originalname); // Use the original file name
+    cb(null, `${Date.now()}-${file.originalname}`); // Unique file names
   },
 });
 
@@ -103,5 +109,9 @@ router.post('/awsInstanceOfUsers',getAwsInstanceDetailsOfUsers)
 router.post('/updateawsInstanceOfUsers',updatetAwsInstanceDetailsOfUsers)
 router.post('/updateawsInstance',updatetAwsLabInstanceDetails)
 router.post('/checkIsLabInstanceLaunched',checkLabCloudInstanceLaunched)
+router.post('/createOrganization',upload.single('logo'),createOrganization)
+router.post('/createCatalogue',createNewCatalogue)
+router.post('/createNewInstance',goldenToInstanceForNewCatalogue)
+
 
 module.exports = router;

@@ -161,7 +161,6 @@ if __name__ == "__main__":
 
         # Retrieve the AMI ID
         ami_id = get_ami_id()
-
         # Store the AMI ID and Lab ID into the database
         store_ami_in_db(lab_id, ami_id)
     finally:

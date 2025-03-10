@@ -1,8 +1,9 @@
-const { Pool } = require('pg');
-const createdTables = require('../createTables/tables')
-const {hashPassword , comparePassword} = require('../helper/authHelper')
-const jwt = require('jsonwebtoken')
-const dotenv = require('dotenv')
+const createdTables = require('../createTables/tables');
+const {hashPassword , comparePassword} = require('../helper/authHelper');
+const jwt = require('jsonwebtoken');
+const dotenv = require('dotenv');
+// const pool = require('../db/dbConnect');
+const {Pool} = require('pg')
 
 
 dotenv.config()
@@ -13,11 +14,6 @@ const pool = new Pool({
   password:process.env.password,
   port: process.env.port,
 });
-
-// const connect = async ()=>{
-//     const client = await pool.connect();
-// }
-// connect();
 
 const signupController = async(req,res)=>{
     try{
@@ -105,7 +101,7 @@ const loginController = async (req, res) => {
         res.cookie("session_token", token, {
             httpOnly: true,                                  // Inaccessible to JavaScript
             secure: process.env.NODE_ENV === "production",   // True in production (HTTPS only)
-            sameSite: "Strict",                              // Helps prevent CSRF attacks
+            sameSite: "Lax",                              // Helps prevent CSRF attacks
             maxAge: 24 * 60 * 60 * 1000                       // Cookie expires in 1 day
         });
 
@@ -296,6 +292,311 @@ const updateUserRole = async(req,res)=>{
     }
 }
 
+//access the token and decode it to get the user id and its details from the database
+const getTokenAndGetUserDetails = async(req,res,next)=>{
+    try {
+        // Retrieve the token from cookies or headers (adjust as needed)
+        const token = req.cookies.session_token || req.headers['authorization'];
+        if (!token) {
+          return res.status(401).json({ error: 'No token provided' });
+        }
+    
+        // Verify and decode the token using your secret key
+        const decoded = jwt.verify(token, process.env.SECRET_KEY);
+        const userId = decoded._id; // Assumes token payload contains an 'id' field
+    
+        // First, query the "users" table for the user
+        let result = await pool.query('SELECT * FROM users WHERE id = $1', [userId]);
+        if (result.rows.length > 0) {
+          req.userData = result.rows[0];
+          return next();
+        }
+    
+        // If not found, query the "organization_users" table
+        result = await pool.query('SELECT * FROM organization_users WHERE id = $1', [userId]);
+        if (result.rows.length > 0) {
+          req.userData = result.rows[0];
+          return next();
+        }
+    
+        // If not found in either table, return a 404 error
+        return res.status(404).json({ error: 'User not found' });
+      } catch (error) {
+        console.error('Error processing token or querying database:', error);
+        return res.status(401).json({ error: 'Invalid token or server error' });
+      }
+}
+
+const logoutController = async(req,res)=>{
+    try{
+        res.clearCookie("session_token")
+        return res.status(200).send({
+            success:true,
+            message:"Successfully logged out",
+        })
+    }
+    catch(error){
+        return res.status(500).send({
+            success:false,
+            message:"Could not log out",
+            error,
+        })
+    }               
+}
+
+//update the organization or root users details 
+const updateUserController = async (req, res) => {
+    try {
+      const { id } = req.params; // user id from URL
+      const { name, email, password } = req.body; // updated fields
+      const hashedPassword = await hashPassword(password);
+      if (!id) {
+        return res.status(400).json({
+          success: false,
+          message: "User id is required",
+        });
+      }
+  
+      let query, values, result;
+  
+      // 1. Check in the users table
+      result = await pool.query("SELECT * FROM users WHERE id = $1", [id]);
+      if (result.rows.length > 0) {
+        const existingUser = result.rows[0];
+        // If a password is provided, check if it is the same as the old password
+        if (hashedPassword && await comparePassword(password,existingUser.password)  ) {
+          return res.status(400).json({
+            success: false,
+            message: "Password similar to old password",
+          });
+        }
+  
+        // Prepare the update query for users table
+        if (password) {
+          query =
+            "UPDATE users SET name = $1, email = $2, password = $3 WHERE id = $4 RETURNING *";
+          values = [name, email, hashedPassword, id];
+        } else {
+          query = "UPDATE users SET name = $1, email = $2 WHERE id = $3 RETURNING *";
+          values = [name, email, id];
+        }
+        result = await pool.query(query, values);
+        return res.status(200).json({
+          success: true,
+          message: "User updated successfully in users table",
+          data: result.rows[0],
+        });
+      }
+  
+      // 2. If not found in users, check in organization_users table
+      result = await pool.query("SELECT * FROM organization_users WHERE id = $1", [
+        id,
+      ]);
+      if (result.rows.length > 0) {
+        const existingUser = result.rows[0];
+        // If a password is provided, check if it is the same as the old password
+        if (hashedPassword && await comparePassword(password,existingUser.password)) {
+          return res.status(400).json({
+            success: false,
+            message: "Password similar to old password",
+          });
+        }
+  
+        // Prepare the update query for organization_users table
+        if (password) {
+          query =
+            "UPDATE organization_users SET name = $1, email = $2, password = $3 WHERE id = $4 RETURNING *";
+          values = [name, email, hashedPassword, id];
+        } else {
+          query =
+            "UPDATE organization_users SET name = $1, email = $2 WHERE id = $3 RETURNING *";
+          values = [name, email, id];
+        }
+        result = await pool.query(query, values);
+        return res.status(200).json({
+          success: true,
+          message: "User updated successfully in organization_users table",
+          data: result.rows[0],
+        });
+      }
+  
+      // 3. If the user is not found in either table
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    } catch (error) {
+      console.error("Error updating user:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error.message,
+      });
+    }
+  };
+  
+
+  //get the users of organization both users and admins
+  const getUsersFromOrganization = async (req, res) => {
+    const { orgId } = req.params; 
+
+    try {
+        
+        const usersQuery = `
+            SELECT * 
+            FROM users 
+            WHERE org_id = $1
+        `;
+
+       
+        const orgUsersQuery = `
+            SELECT * 
+            FROM organization_users 
+            WHERE org_id = $1
+        `;
+
+        
+        const [usersResult, orgUsersResult] = await Promise.all([
+            pool.query(usersQuery, [orgId]),
+            pool.query(orgUsersQuery, [orgId])
+        ]);
+
+       
+        const users = [...usersResult.rows, ...orgUsersResult.rows];
+
+        
+        if (users.length === 0) {
+            return res.status(404).send({
+              success:false,
+              message: "No users found for this organization." });
+        }
+
+        
+        return  res.send({ 
+          success: true,
+          message: "Users found",
+          data: users
+         });
+    } catch (error) {
+        console.error("Error fetching users:", error);
+        return res.status(500).json({ 
+          success: false, 
+          error: "Internal Server Error" 
+        });
+    }
+};
+
+//delete the users
+const deleteUsers = async (req, res) => {
+  const { orgId , userIds } = req.body;
+
+  if (!Array.isArray(userIds) || userIds.length === 0) {
+      return res.status(400).json({ success: false, message: "Invalid or missing userIds array." });
+  }
+
+  try {
+      // Start a transaction
+      await pool.query("BEGIN");
+
+      // Delete from users table
+      const deleteUsersQuery = `
+          DELETE FROM users 
+          WHERE id = ANY($1) AND org_id = $2
+          RETURNING id
+      `;
+      const deletedUsers = await pool.query(deleteUsersQuery, [userIds, orgId]);
+
+      // Get IDs of users that were deleted from the users table
+      const deletedUserIds = deletedUsers.rows.map(row => row.id);
+
+      // Identify remaining user IDs that were not deleted from users table
+      const remainingUserIds = userIds.filter(id => !deletedUserIds.includes(id));
+
+      let deletedOrgUsers = [];
+      if (remainingUserIds.length > 0) {
+          // Delete from organization_users table
+          const deleteOrgUsersQuery = `
+              DELETE FROM organization_users 
+              WHERE id = ANY($1) AND org_id = $2
+              RETURNING id
+          `;
+          deletedOrgUsers = await pool.query(deleteOrgUsersQuery, [remainingUserIds, orgId]);
+      }
+
+      // Commit the transaction
+      await pool.query("COMMIT");
+
+      if (deletedUsers.rowCount === 0 && deletedOrgUsers.rowCount === 0) {
+          return res.status(404).send({ success: false, message: "No matching users found for deletion." });
+      }
+
+      return res.status(200).send({
+          success: true,
+          message: "Users deleted successfully.",
+          deletedUsers: deletedUserIds,
+          deletedOrgUsers: deletedOrgUsers.rows.map(row => row.user_id)
+      });
+  } catch (error) {
+      await pool.query("ROLLBACK"); // Rollback in case of an error
+      console.error("Error deleting users:", error);
+      return res.status(500).send({ 
+          success: false,
+          error: "Internal Server Error"
+         });
+  }
+};
+
+const updateUser = async (req, res) => {
+  const { id } = req.params;  
+  const { name, email, role, status } = req.body; 
+
+  try {
+      
+      const userResult = await pool.query("SELECT * FROM users WHERE id = $1", [id]);
+
+      if (userResult.rows.length > 0) {
+          
+          await pool.query(
+              "UPDATE users SET name = $1, email = $2, role = $3, status = $4 WHERE id = $5",
+              [name, email, role, status, id]
+          );
+          return res.status(200).send({
+            success:true,
+            message: "User updated successfully in users table",
+           });
+      }
+
+      // If not found in 'users' table, check in 'organization_users' table
+      const orgUserResult = await pool.query("SELECT * FROM organization_users WHERE id = $1", [id]);
+
+      if (orgUserResult.rows.length > 0) {
+          // User found in 'organization_users' table, update the user
+          await pool.query(
+              "UPDATE organization_users SET name = $1, email = $2, role = $3, status = $4 WHERE id = $5",
+              [name, email, role, status, id]
+          );
+          return res.status(200).send({
+            success:true,
+            message: "User updated successfully in organization_users table" });
+      }
+
+      // If user is not found in both tables
+      return res.status(404).send({
+        success:false,
+        message: "User not found in both tables"
+       });
+
+  } catch (error) {
+      console.error("Error updating user:", error);
+      return res.status(500).send({ 
+        success:false,
+        message: "Internal server error",
+        error:error.message
+      });
+  }
+};
+
+
 module.exports={
     signupController,
     loginController,
@@ -304,4 +605,10 @@ module.exports={
     getUserData,
     updateUserOrganization,
     updateUserRole,
+    getTokenAndGetUserDetails,
+    logoutController,
+    updateUserController,
+    getUsersFromOrganization,
+    deleteUsers, 
+    updateUser,
 }

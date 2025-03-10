@@ -1,0 +1,40 @@
+Category,Name
+Ubuntu,"Ubuntu Server 24.04 LTS (HVM), SSD Volume Type"
+Ubuntu,"Ubuntu Server 22.04 LTS (HVM), SSD Volume Type"
+Ubuntu,Ubuntu Server 22.04 LTS (HVM) with SQL Server 2022 Standard
+Ubuntu,"Ubuntu Pro - Ubuntu Server Pro 24.04 LTS (HVM), SSD Volume Type"
+Ubuntu,Deep Learning Base OSS Nvidia Driver GPU AMI (Ubuntu 22.04)
+Ubuntu,Deep Learning OSS Nvidia Driver AMI GPU PyTorch 2.5 (Ubuntu 22.04)
+Ubuntu,Deep Learning AMI Neuron (Ubuntu 22.04)
+Ubuntu,Deep Learning OSS Nvidia Driver AMI GPU TensorFlow 2.18 (Ubuntu 22.04)
+Windows,Microsoft Windows Server 2025 Base
+Windows,Microsoft Windows Server 2025 Core Base
+Windows,Microsoft Windows Server 2022 Base
+Windows,Microsoft Windows Server 2022 Core Base
+Windows,Microsoft Windows Server 2019 Base
+Windows,Microsoft Windows Server 2019 Core Base
+Windows,Microsoft Windows Server 2016 Base
+Windows,Microsoft Windows Server 2016 Core Base
+Windows,Microsoft Windows Server 2022 with SQL Server 2022 Standard
+Windows,Microsoft Windows Server 2022 with SQL Server 2022 Enterprise
+Windows,Microsoft Windows Server 2022 with SQL Server 2022 Web
+Windows,Microsoft Windows Server 2019 with SQL Server 2022 Standard
+Windows,Microsoft Windows Server 2019 with SQL Server 2022 Enterprise
+Windows,Microsoft Windows Server 2022 with SQL Server 2019 Standard
+Windows,Microsoft Windows Server 2022 with SQL Server 2019 Enterprise
+Windows,Microsoft Windows Server 2019 with SQL Server 2019 Standard
+Windows,Microsoft Windows Server 2019 with SQL Server 2019 Enterprise
+Windows,Microsoft Windows Server 2019 with SQL Server 2019 Web
+Windows,Microsoft Windows Server 2019 with SQL Server 2017 Standard
+Rhel,"Red Hat Enterprise Linux 9 (HVM), SSD Volume Type"
+Rhel,Red Hat Enterprise Linux 9 with High Availability
+Rhel,RHEL 8 with SQL Server 2022 Standard Edition AMI
+Linux,Amazon Linux 2023 AMI
+Linux,"Amazon Linux 2 AMI (HVM) - Kernel 5.10, SSD Volume Type"
+Linux,Deep Learning OSS Nvidia Driver AMI GPU PyTorch 2.5 (Amazon Linux 2023)
+Linux,Deep Learning OSS Nvidia Driver AMI GPU TensorFlow 2.16 (Amazon Linux 2)
+Linux,Deep Learning Base OSS Nvidia Driver GPU AMI (Amazon Linux 2023)
+Linux,Deep Learning AMI Neuron (Amazon Linux 2023)
+Linux,Amazon Linux 2 LTS with SOL Server 2019 Standard
+Linux,Amazon Linux 2 LTS with SQL Server 2017 Standard
+Linux,"Amazon Linux 2 with .NET 6, PowerShell, Mono, and MATE Desktop Environment"

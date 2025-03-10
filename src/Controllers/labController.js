@@ -79,8 +79,8 @@ const createLab=async(req,res)=>{
     try{
        const {data,user} = req.body;
        const {type,details,platform,provider,config,instance} = data
-       const query_instance=`INSERT INTO createlab (user_id,type,platform,provider,os,os_version,cpu,ram,storage,instance,title,description,duration) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *`
-       const output = await pool.query(query_instance,[user.id,type,platform,provider,config.os,config.os_version,config.cpu,config.ram,config.storage,instance,details.title,details.description,details.duration])
+       const query_instance=`INSERT INTO createlab (user_id,type,platform,provider,os,os_version,cpu,ram,storage,instance,title,description,duration,snapshot_type) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING *`
+       const output = await pool.query(query_instance,[user.id,type,platform,provider,config.os,config.os_version,config.cpu,config.ram,config.storage,instance,details.title,details.description,details.duration,config.snapshot_type])
        if(!output.rows[0]){
         return res.status(405).send({
             success:false,
@@ -101,6 +101,34 @@ const createLab=async(req,res)=>{
             error
         })
     }
+}
+
+//create new catalogue
+const createNewCatalogue=async(req,res)=>{
+  try{
+     const {name,cpu,ram,storage,instance,snapshotType,os,os_version,platform,provider,description,duration,user} = req.body;
+     const query_instance=`INSERT INTO createlab (user_id,type,platform,provider,os,os_version,cpu,ram,storage,instance,title,description,duration,snapshot_type) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING *`
+     const output = await pool.query(query_instance,[user,instance,platform,provider,os,os_version,cpu,ram,storage,instance,name,description,duration,snapshotType])
+     if(!output.rows[0]){
+      return res.status(405).send({
+          success:false,
+          message:"Could not store the lab catalogue",
+      })
+     }
+     res.status(200).send({
+      success:true,
+      message:"Successfully stored the catalogue",
+      output:output.rows[0],
+     })
+  }
+  catch(error){
+      console.log(error)
+      return res.status(500).send({
+          success:false,
+          message:"Could not create the lab",
+          error
+      })
+  }
 }
 
 //delete lab from database
@@ -197,12 +225,11 @@ const getLabsConfigured=async(req,res)=>{
        SELECT cl.* 
 FROM createlab cl
 INNER JOIN instances ic 
-ON cl.lab_id = ic.lab_id 
-WHERE cl.user_id = $1`;
+ON cl.lab_id = ic.lab_id  `;
 
 
       
-const labs = await pool.query(query_instance, [admin_id]);
+const labs = await pool.query(query_instance);
         if(!labs.rows){
             return res.status(404).send({
                 success:false,
@@ -216,7 +243,6 @@ const labs = await pool.query(query_instance, [admin_id]);
         })
     }
     catch(error){
-        console.log(error)
         return res.status(500).send({
             success:false,
             message:"Error in gettings the labs",
@@ -227,16 +253,15 @@ const labs = await pool.query(query_instance, [admin_id]);
 
 const getLabOnId = async(req,res)=>{
     try{
-        
         const {labId} = req.body;
         const query_instance =`SELECT * from createlab where lab_id=$1`
         const result = await pool.query(query_instance,[labId]);
 
-        if(!result.rows[0]){
-            return res.status(405).send({
-                success:false,
-                message:"Invalid lab id"
-            })
+        if (!result || !result.rows || result.rows.length === 0) {
+          return res.status(404).send({
+            success: false,
+            message: "No lab found for the provided labId",
+          });
         }
         return res.status(200).send({
             success:true,
@@ -284,11 +309,9 @@ const getAssignLabOnLabId = async(req,res)=>{
 const assignLab = async (req, res) => {
   try {
       const { lab, userId, assign_admin_id } = req.body;
-
       // Normalize `userId` to an array for consistent handling
       const userIds = Array.isArray(userId) ? userId : [userId];
-
-      const getDays = await pool.query(`SELECT config_details FROM lab_batch WHERE lab_id=$1`, [lab]);
+      const getDays = await pool.query(`SELECT config_details FROM lab_batch WHERE lab_id=$1 and admin_id=$2`, [lab,assign_admin_id]);
       if (!getDays.rows.length) {
           return res.status(400).send({
               success: false,
@@ -652,9 +675,9 @@ const updateLabsOnConfig=async(req,res)=>{
 
 const awsConfigure=async(req,res)=>{
     try {
-        const {lab_id} = req.body
-        const query_instance = 'select * from amiinformation where lab_id=$1'
-        const response = await pool.query(query_instance,[lab_id])
+        const {lab_id} = req.body;
+        const query_instance = 'select * from amiinformation where lab_id=$1';
+        const response = await pool.query(query_instance,[lab_id]);
         if(!response.rows[0]){
             return res.status(404).send({
                 success:true,
@@ -675,58 +698,111 @@ const awsConfigure=async(req,res)=>{
     }
 }
 
-const vmToGoldenImage=async(req,res)=>{
-    const { instance_id ,lab_id } = req.body;
-    console.log('vm-gold')
-    // Run the script
-    const args = [instance_id,lab_id];
-    const pythonProcess = spawn('python', ['vm_goldenImage.py',...args]);
+// const vmToGoldenImage=async(req,res)=>{
+//     const { instance_id ,lab_id } = req.body;
+//     console.log('vm-gold')
+//     // Run the script
+//     const args = [instance_id,lab_id];
+//     const pythonProcess = spawn('python', ['vm_goldenImage.py',...args]);
     
-    let result = '';
+//     let result = '';
     
-    // Capture the output of the Python script
-    pythonProcess.stdout.on('data', (data) => {
-      console.log('Output produced');
+//     // Capture the output of the Python script
+//     pythonProcess.stdout.on('data', (data) => {
+//       console.log('Output produced');
       
-      // Format the script's output
-      function formatOutput(output) {
-        return output.replace(/\r\n/g, '\n'); // Replace \r\n with newlines
+//       // Format the script's output
+//       function formatOutput(output) {
+//         return output.replace(/\r\n/g, '\n'); // Replace \r\n with newlines
+//       }
+    
+//       result += formatOutput(data.toString()); // Accumulate the script's output
+//       console.log(`stdout: ${data}`);
+//     });
+    
+//     // Capture any errors in the script
+//     pythonProcess.stderr.on('data', (data) => {
+//       console.error(`stderr: ${data}`);
+    
+//       // Send error response to the frontend
+//       res.status(400).json({
+//         success: false,
+//         message: 'Error during script execution',
+//         details: data.toString(), // Include error details for debugging
+//       });
+//     });
+    
+//     // Handle the process exit event
+//     pythonProcess.on('close', (code) => {
+//       if (code === 0) {
+//         // Send success response to the frontend
+//         res.status(200).json({
+//           success: true,
+//           message: 'VmToGoldenImage script executed successfully',
+//           result, // Include the script output
+//         });
+//       } else {
+//         // Send generic failure response
+//         res.status(500).json({
+//           success: false,
+//           message: 'VmToGoldenImage script execution failed',
+//         });
+//       }
+//     });
+// }
+
+const vmToGoldenImage = async (req, res) => {
+  const { instance_id, lab_id } = req.body;
+  console.log(" vmToGoldenImage started...");
+
+  const pythonProcess = spawn("python", ["vm_goldenImage.py", instance_id, lab_id]);
+
+  let result = "";
+  let errorOutput = "";
+
+  // Capture standard output (stdout)
+  pythonProcess.stdout.on("data", (data) => {
+      result += data.toString(); // Accumulate script's output
+      console.log(`🟢 stdout: ${data.toString()}`);
+  });
+
+  // Capture errors (stderr)
+  pythonProcess.stderr.on("data", (data) => {
+      errorOutput += data.toString();
+      console.error(` stderr: ${data.toString()}`);
+  });
+
+  // Handle script completion
+  pythonProcess.on("close", (code) => {
+      console.log(` Process exited with code ${code}`);
+
+      try {
+          if (code === 0) {
+              // Parse JSON output from Python
+              const parsedResult = JSON.parse(result);
+              return res.status(200).send({
+                  success: true,
+                  message: "VmToGoldenImage script executed successfully",
+                  data: parsedResult, // Send parsed JSON
+              });
+          } else {
+              return res.status(500).send({
+                  success: false,
+                  message: "VmToGoldenImage script execution failed",
+                  error: errorOutput.trim() || "Unknown error",
+              });
+          }
+      } catch (parseError) {
+          return res.status(500).send({
+              success: false,
+              message: "Failed to parse Python script output",
+              rawOutput: result,
+              error: parseError.message,
+          });
       }
-    
-      result += formatOutput(data.toString()); // Accumulate the script's output
-      console.log(`stdout: ${data}`);
-    });
-    
-    // Capture any errors in the script
-    pythonProcess.stderr.on('data', (data) => {
-      console.error(`stderr: ${data}`);
-    
-      // Send error response to the frontend
-      res.status(400).json({
-        success: false,
-        message: 'Error during script execution',
-        details: data.toString(), // Include error details for debugging
-      });
-    });
-    
-    // Handle the process exit event
-    pythonProcess.on('close', (code) => {
-      if (code === 0) {
-        // Send success response to the frontend
-        res.status(200).json({
-          success: true,
-          message: 'VmToGoldenImage script executed successfully',
-          result, // Include the script output
-        });
-      } else {
-        // Send generic failure response
-        res.status(500).json({
-          success: false,
-          message: 'VmToGoldenImage script execution failed',
-        });
-      }
-    });
-}
+  });
+};
+
 const goldenToInstance = async (req,res)=>{
     const {instance_type, ami_id ,no_instance,termination_period } = req.body;
     console.log('gold-in')
@@ -780,6 +856,60 @@ const goldenToInstance = async (req,res)=>{
     });
 }
 
+//create an instance from goldenImage(new catalogue) 
+const goldenToInstanceForNewCatalogue = async (req,res)=>{
+  const {instance_type, ami_id ,storage_size,lab_id,prev_labId } = req.body;
+  console.log('NewCatalogue')
+  // Run the script
+  const args = [instance_type,ami_id,storage_size,lab_id,prev_labId];
+  const pythonProcess = spawn('python', ['./python_scripts.py/cloudvms/goldenToInstanceForNewCatalogue.py',...args]);
+  
+  let result = '';
+  
+  // Capture the output of the Python script
+  pythonProcess.stdout.on('data', (data) => {
+    console.log('Output produced');
+    
+    // Format the script's output
+    function formatOutput(output) {
+      return output.replace(/\r\n/g, '\n'); // Replace \r\n with newlines
+    }
+  
+    result += formatOutput(data.toString()); // Accumulate the script's output
+    console.log(`stdout: ${data}`);
+  });
+  
+  // Capture any errors in the script
+  pythonProcess.stderr.on('data', (data) => {
+    console.error(`stderr: ${data}`);
+  
+    // Send error response to the frontend
+    res.status(400).json({
+      success: false,
+      message: 'Error during script execution',
+      details: data.toString(), // Include error details for debugging
+    });
+  });
+  
+  // Handle the process exit event
+  pythonProcess.on('close', (code) => {
+    if (code === 0) {
+      // Send success response to the frontend
+      res.status(200).json({
+        success: true,
+        message: 'GoldenImageToInstance script executed successfully',
+        result, // Include the script output
+      });
+    } else {
+      // Send generic failure response
+      res.status(500).json({
+        success: false,
+        message: 'GoldenImageToInstance script execution failed',
+      });
+    }
+  });
+}
+
 const getAwsInstanceDetails=async(req,res)=>{
     try {
         const {lab_id} = req.body;
@@ -788,7 +918,7 @@ const getAwsInstanceDetails=async(req,res)=>{
         if(!response.rows[0]){
             return res.status(404).send({
                 success:false,
-                message:"Invalie lab id"
+                message:"Invalid lab id"
             })
         }
         return res.status(200).send({
@@ -805,6 +935,7 @@ const getAwsInstanceDetails=async(req,res)=>{
         })
     }
 }
+
 const getAwsInstanceDetailsOfUsers=async(req,res)=>{
   try {
       const {lab_id,user_id} = req.body;
@@ -1537,7 +1668,7 @@ const getNewIpFromCloud=async(req,res)=>{
           res.status(500).json({
             success: false,
             message: 'Get public ip script execution failed',
-          });
+          })
         }
       });
   } catch (error) {
@@ -1618,7 +1749,7 @@ const getUserDecryptPasswordFromCloud=async(req,res)=>{
 const updateAssessmentStorage=async(req,res)=>{
     try {
         console.log('edit instance')
-        const {new_volume_size,instance_id,lab_id}=req.body 
+        const {new_volume_size,instance_id,lab_id}=req.body;
         const args = [instance_id,new_volume_size]
         const pythonProcess = spawn('python', ['./python_scripts.py/cloudvms/editinstance.py', instance_id, new_volume_size]);
 
@@ -2130,6 +2261,36 @@ const checkLabCloudInstanceLaunched=async(req,res)=>{
   });
 }
 
+//create a organization 
+const createOrganization = async (req, res) => {
+  try {
+    const { organization_name, admin_name,email,phone,address,website,org_type,org_id,admin_id} = req.body;
+    const logoPath = req.file.path
+    const query_instance = 'insert into organizations(organization_name,org_email,org_admin,org_type,admin_name,phone_number,address,website_url,org_id,logo) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *'
+    const response
+     = await pool.query(query_instance,[organization_name,email,admin_id ,org_type,admin_name,phone,address,website,org_id,logoPath])      
+    if(!response.rows.length){
+        return res.status(404).send({
+            success:false,
+            message:"Invalid credentials"
+        })                
+  } 
+  return res.status(200).send({ 
+    success:true,
+    message:"Successfully accessed",
+    data:response.rows[0]
+})    
+}
+  catch (error) {
+    console.log(error)
+    return res.status(500).send({
+      success:false,
+      message:"Error in server",
+      error:error.message
+    }
+    )
+  }
+}
 
 module.exports = {
     createLab,
@@ -2167,4 +2328,5 @@ module.exports = {
     checkCloudAssignedInstanceLaunched,stopInstance,getSofwareDetails,getUserDecryptPasswordFromCloud,
     getNewIpFromCloud,deleteLab,getLabCatalogues,getAwsInstanceDetailsOfUsers,updatetAwsInstanceDetailsOfUsers,updatetAwsLabInstanceDetails,
     checkLabCloudInstanceLaunched,
+    createOrganization,createNewCatalogue,goldenToInstanceForNewCatalogue
 }
